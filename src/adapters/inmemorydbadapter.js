@@ -1,4 +1,4 @@
-var demoData = require("./demo-surveys");
+var demoData = require("../../demo-surveys");
 
 var currentId = demoData.surveys.length + 1;
 

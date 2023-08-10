@@ -1,10 +1,14 @@
 var express = require("express");
 var bodyParser = require("body-parser");
 var session = require("express-session");
-var inmemorydbadapter = require("./inmemorydbadapter");
+var dbAdapter = require("./src/adapters/objectionAdapter");
 var apiBaseAddress = "/api";
+var cors = require('cors')
 
 var app = express();
+app.use(cors())
+
+
 app.use(
   session({
     secret: "mysecret",
@@ -17,7 +21,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 function getDBAdapter(req) {
-  var db = new inmemorydbadapter(req.session);
+  var db = new dbAdapter(req.session);
   return db;
 }
 
@@ -62,7 +66,8 @@ app.post(apiBaseAddress + "/changeJson", function (req, res) {
   var db = getDBAdapter(req);
   var id = req.body.id;
   var json = req.body.json;
-  db.storeSurvey(id, null, json, function (survey) {
+  const surveyName = json?.title ||id;
+  db.storeSurvey(id, surveyName, json, function (survey) {
     sendJsonResult(res, survey);
   });
 });
@@ -72,7 +77,7 @@ app.post(apiBaseAddress + "/post", function (req, res) {
   var postId = req.body.postId;
   var surveyResult = req.body.surveyResult;
   db.postResults(postId, surveyResult, function (result) {
-    sendJsonResult(res, result.json);
+    sendJsonResult(res, result);
   });
 });
 
@@ -80,7 +85,7 @@ app.get(apiBaseAddress + "/delete", function (req, res) {
   var db = getDBAdapter(req);
   var id = req.query["id"];
   db.deleteSurvey(id, function (result) {
-    sendJsonResult(res, { id: id });
+    sendJsonResult(res, { id: id, result });
   });
 });
 
